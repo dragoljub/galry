@@ -377,6 +377,7 @@ class ShaderCreator(object):
         if shader == 'vertex':
             header += "".join([get_uniform_declaration(uniform) for uniform in self.uniforms])
             header += "".join([get_attribute_declaration(attribute) for attribute in self.attributes])
+            header += "".join([get_texture_declaration(texture) for texture in self.textures])
         elif shader == 'fragment':
             header += "".join([get_uniform_declaration(uniform) for uniform in self.uniforms])
             header += "".join([get_texture_declaration(texture) for texture in self.textures])

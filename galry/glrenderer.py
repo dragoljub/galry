@@ -231,19 +231,20 @@ class Texture(object):
         # ndim = 2
         ncomponents = shape[2]
         # ncomponents==1 ==> GL_R, 3 ==> GL_RGB, 4 ==> GL_RGBA
-        component_type = getattr(gl, ["GL_INTENSITY8", None, "GL_RGB", "GL_RGBA"] \
+        component_type = getattr(gl, ["GL_INTENSITY8", None, "GL_RGB32F", "GL_RGBA32F"] \
                                             [ncomponents - 1])
         return ndim, ncomponents, component_type
 
     @staticmethod    
     def convert_data(data):
         """convert data in a array of uint8 in [0, 255]."""
-        if data.dtype == np.float32 or data.dtype == np.float64:
-            return np.array(255 * data, dtype=np.uint8)
-        elif data.dtype == np.uint8:
-            return data
-        else:
-            raise ValueError("The texture is in an unsupported format.")
+        return np.array(data, dtype=np.float32)
+        # if data.dtype == np.float32 or data.dtype == np.float64:
+            # return np.array(255 * data, dtype=np.uint8)
+        # elif data.dtype == np.uint8:
+            # return data
+        # else:
+            # raise ValueError("The texture is in an unsupported format.")
     
     @staticmethod
     def copy(fbo, tex_src, tex_dst, width, height):
@@ -289,15 +290,28 @@ class Texture(object):
         # get texture info
         ndim, ncomponents, component_type = Texture.get_info(data)
         textype = getattr(gl, "GL_TEXTURE_%dD" % ndim)
+        
+        component_type2 = component_type
+        if component_type == gl.GL_RGB32F:
+            component_type2 = gl.GL_RGB
+        if component_type == gl.GL_RGBA32F:
+            component_type2 = gl.GL_RGBA
+        
         # print ndim, shape, data.shape
         # load data in the buffer
         if ndim == 1:
-            gl.glTexImage1D(textype, 0, component_type, shape[1], 0, component_type,
-                            gl.GL_UNSIGNED_BYTE, data)
+            gl.glTexImage1D(textype, 0, component_type, shape[1], 0, component_type2,
+                            # gl.GL_UNSIGNED_BYTE,
+                            gl.GL_FLOAT,
+                            data)
         elif ndim == 2:
             # width, height == shape[1], shape[0]: Thanks to the Confusion Club
+            
             gl.glTexImage2D(textype, 0, component_type, shape[1], shape[0], 0,
-                            component_type, gl.GL_UNSIGNED_BYTE, data)
+                            component_type2,
+                            # gl.GL_UNSIGNED_BYTE,
+                            gl.GL_FLOAT,
+                            data)
         
     @staticmethod
     def update(data):
@@ -308,13 +322,27 @@ class Texture(object):
         # get texture info
         ndim, ncomponents, component_type = Texture.get_info(data)
         textype = getattr(gl, "GL_TEXTURE_%dD" % ndim)
+        
+        component_type2 = component_type
+        if component_type == gl.GL_RGB32F:
+            component_type2 = gl.GL_RGB
+        if component_type == gl.GL_RGBA32F:
+            component_type2 = gl.GL_RGBA
+        
+        
         # update buffer
         if ndim == 1:
             gl.glTexSubImage1D(textype, 0, 0, shape[1],
-                               component_type, gl.GL_UNSIGNED_BYTE, data)
+                               component_type2,
+                               # gl.GL_UNSIGNED_BYTE,
+                               gl.GL_FLOAT,
+                               data)
         elif ndim == 2:
             gl.glTexSubImage2D(textype, 0, 0, 0, shape[1], shape[0],
-                               component_type, gl.GL_UNSIGNED_BYTE, data)
+                               component_type2,
+                               # gl.GL_UNSIGNED_BYTE,
+                               gl.GL_FLOAT,
+                               data)
 
     @staticmethod
     def delete(*buffers):
